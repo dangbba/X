@@ -1,3 +1,12 @@
+import styled from "styled-components";
+import PostForm from "../components/post-form";
+
+const Wrapper = styled.div``;
+
 export default function Home(){
-  return <h1></h1>;
+  return (
+    <Wrapper>
+      <PostForm />
+    </Wrapper>
+  );
 }
