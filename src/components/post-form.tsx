@@ -1,7 +1,9 @@
+import { addDoc, collection } from "firebase/firestore";
 import { useState } from "react";
 import styled from "styled-components"
+import { auth, db } from "../firebase";
 
-const Form = styled.div`
+const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -68,9 +70,27 @@ export default function PostForm(){
         setFile(files[0]);
       }
   };
+  const onSubmit = async(e : React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user || isLoading || x === '' || x.length > 180) return;
 
+    try {
+      setLoading(true);
+      await addDoc(collection(db, "tweets"), {
+        x,
+        createdAt: Date.now(),
+        username: user.displayName || "Anonymous",
+        userId: user.uid
+      });
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-    <Form>
+    <Form onSubmit={onSubmit}>
       <TextArea rows={5} maxLength={180} onChange={onChange} value={x} placeholder="What is happening?!" />
       <AttachFileButton htmlFor="file">{file ? "Photo added ✔" : "Add photo"}</AttachFileButton>
       <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*" />

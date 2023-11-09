@@ -22,7 +22,7 @@ export default function CreateAccount(){
       setPassword(value)
     }
   };
-  const onSubmit =async (e : React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async(e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     if (isLoading || name === '' || email === '' || password === '') return;
