@@ -91,6 +91,8 @@ export default function PostForm(){
           photo: url
         });
       }
+      setX('');
+      setFile(null);
     } catch (e) {
       console.log(e);
     } finally {
