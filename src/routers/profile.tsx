@@ -1,8 +1,11 @@
 import styled from "styled-components";
-import { auth, storage } from "../firebase";
-import { useState } from "react";
+import { auth, db, storage } from "../firebase";
+import { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
+import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { Ix } from "../components/timeline";
+import X from "../components/x";
 
 const Wrapper = styled.div`
   display: flex;
@@ -36,9 +39,18 @@ const Name = styled.span`
   font-size: 22px;
 `;
 
+const Tweets = styled.div`
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+
 export default function Profile(){
   const user = auth.currentUser;
   const [avatar, setAvatar] = useState(user?.photoURL);
+  const [xs, setX] = useState<Ix[]>([]);
   const onAvatarChange = async(e : React.ChangeEvent<HTMLInputElement>) => {
     const {files} = e.target;
     if (!user) return;
@@ -50,7 +62,31 @@ export default function Profile(){
       setAvatar(avatarUrl)
       await updateProfile(user, {photoURL: avatarUrl,})
     }
-  }
+  };
+  const fetchXs = async() => {
+    const XQuery = query(
+      collection(db, "tweets"),
+      where("userId", "==", user?.uid),
+      orderBy("createdAt", "desc"),
+      limit(25)
+    );
+    const snapshot = await getDocs(XQuery);
+    const tweets = snapshot.docs.map(doc => {
+      const {x, createdAt, userId, username, photo} = doc.data();
+      return {
+        x,
+        createdAt,
+        userId,
+        username,
+        photo,
+        id: doc.id,
+      };
+    });
+    setX(tweets);
+  };
+  useEffect(() => {
+    fetchXs();
+  }, []);
   return <Wrapper>
     <AvatarUpload htmlFor="avatar">
       {avatar ? <AvatarImg src={avatar} /> : <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -59,5 +95,8 @@ export default function Profile(){
     </AvatarUpload>
     <AvatarInput onChange={onAvatarChange} id="avatar" type="file" accept="image/*" />
     <Name>{user?.displayName ?? "Anonymous"}</Name>
+    <Tweets>
+      {xs.map(x => <X key={x.id} {...x} />)}
+    </Tweets>
   </Wrapper>;
 }
